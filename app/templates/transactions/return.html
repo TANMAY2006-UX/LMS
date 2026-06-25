@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto space-y-6">
+    
+    <!-- Header -->
+    <div class="border-b border-gray-200 dark:border-gray-700 pb-4">
+        <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Process Returns</h1>
+        <p class="text-sm text-gray-500 dark:text-gray-400">View active borrowed books and process their return to the library.</p>
+    </div>
+
+    <!-- Active Transactions Table -->
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="w-full text-sm text-left text-gray-500 dark:text-gray-400">
+                <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
+                    <tr>
+                        <th scope="col" class="px-6 py-3">Txn ID</th>
+                        <th scope="col" class="px-6 py-3">Member</th>
+                        <th scope="col" class="px-6 py-3">Book & Copy</th>
+                        <th scope="col" class="px-6 py-3">Due Date</th>
+                        <th scope="col" class="px-6 py-3 text-right">Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for txn in transactions %}
+                    <tr class="border-b dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
+                        <td class="px-6 py-4 font-medium text-gray-900 dark:text-white">
+                            #{{ txn.id }}
+                        </td>
+                        <td class="px-6 py-4">
+                            <div class="font-medium text-gray-900 dark:text-white">
+                                Member ID: {{ txn.member_id }}
+                            </div>
+                        </td>
+                        <td class="px-6 py-4">
+                            Copy #{{ txn.copy_id }}
+                        </td>
+                        <td class="px-6 py-4">
+                            <span class="{% if txn.status == 'overdue' %}text-red-600 font-bold{% endif %}">
+                                {{ txn.due_date.strftime('%Y-%m-%d') }}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 text-right">
+                            <form action="{{ url_for('transactions.return_book') }}" method="POST" class="inline-block">
+                                <input type="hidden" name="transaction_id" value="{{ txn.id }}">
+                                <input type="text" name="notes" placeholder="Optional notes..." class="mr-2 bg-gray-50 border border-gray-300 text-gray-900 text-xs rounded-lg focus:ring-blue-500 focus:border-blue-500 p-1.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white w-32">
+                                <button type="submit" class="text-white bg-green-600 hover:bg-green-700 focus:ring-4 focus:outline-none focus:ring-green-300 font-medium rounded-lg text-xs px-3 py-1.5 text-center dark:bg-green-600 dark:hover:bg-green-700 dark:focus:ring-green-800 transition-colors">
+                                    Process Return
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="5" class="px-6 py-8 text-center text-gray-500">
+                            No active borrows found. The library is fully stocked!
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

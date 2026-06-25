@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto space-y-6">
+    <!-- Header -->
+    <div class="border-b border-gray-200 dark:border-gray-700 pb-4">
+        <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Fine Management</h1>
+        <p class="text-sm text-gray-500 dark:text-gray-400">Process payments and manage waivers for pending library fines.</p>
+    </div>
+
+    <!-- Pending Fines Table -->
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="w-full text-sm text-left text-gray-500 dark:text-gray-400">
+                <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
+                    <tr>
+                        <th scope="col" class="px-6 py-3">Txn #</th>
+                        <th scope="col" class="px-6 py-3">Member</th>
+                        <th scope="col" class="px-6 py-3">Overdue</th>
+                        <th scope="col" class="px-6 py-3">Amount</th>
+                        <th scope="col" class="px-6 py-3 text-right">Actions (Pay / Waive)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for fine in fines %}
+                    <tr class="border-b dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
+                        <td class="px-6 py-4 font-medium text-gray-900 dark:text-white">
+                            <span title="Physical Copy #{{ fine.copy_id }}">#{{ fine.transaction_id }}</span>
+                        </td>
+                        <td class="px-6 py-4">
+                            <div class="font-bold text-gray-900 dark:text-white">{{ fine.member_name }}</div>
+                            <div class="text-xs text-gray-500">{{ fine.member_tier | title }}</div>
+                        </td>
+                        <td class="px-6 py-4">
+                            <span class="text-red-600 font-medium">{{ fine.days_overdue }} days</span>
+                        </td>
+                        <td class="px-6 py-4">
+                            <span class="bg-yellow-100 text-yellow-800 text-sm font-bold px-2.5 py-0.5 rounded dark:bg-yellow-900 dark:text-yellow-300">
+                                ₹{{ fine.amount }}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 text-right space-y-2">
+                            <!-- Quick Pay Button -->
+                            <form action="{{ url_for('fines.pay_fine', fine_id=fine.id) }}" method="POST" class="inline-block">
+                                <button type="submit" onclick="return confirm('Confirm receipt of physical cash?');" class="text-white bg-green-600 hover:bg-green-700 focus:ring-4 focus:outline-none focus:ring-green-300 font-medium rounded-lg text-xs px-3 py-1.5 dark:bg-green-600 dark:hover:bg-green-700 transition-colors">
+                                    Mark Paid
+                                </button>
+                            </form>
+                            
+                            <!-- Waive Form (Requires Reason) -->
+                            <form action="{{ url_for('fines.waive_fine', fine_id=fine.id) }}" method="POST" class="flex justify-end items-center mt-2 space-x-2">
+                                <input type="text" name="waiver_reason" placeholder="Reason for waiver..." required minlength="5" class="bg-gray-50 border border-gray-300 text-gray-900 text-xs rounded-lg focus:ring-blue-500 focus:border-blue-500 p-1.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white w-48">
+                                <button type="submit" class="text-white bg-gray-600 hover:bg-gray-700 focus:ring-4 focus:outline-none focus:ring-gray-300 font-medium rounded-lg text-xs px-3 py-1.5 dark:bg-gray-500 dark:hover:bg-gray-600 transition-colors">
+                                    Waive
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <!-- Beautiful Empty State -->
+                    <tr>
+                        <td colspan="5" class="px-6 py-16 text-center">
+                            <div class="flex flex-col items-center justify-center">
+                                <div class="bg-green-50 dark:bg-green-900/20 p-4 rounded-full mb-4">
+                                    <svg class="w-12 h-12 text-green-500 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                    </svg>
+                                </div>
+                                <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-2">All Clear! No Pending Fines</h3>
+                                <p class="text-sm text-gray-500 dark:text-gray-400 max-w-sm mx-auto">
+                                    Your members are returning books on time, or your grace periods are working beautifully. There are no fines to process right now.
+                                </p>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

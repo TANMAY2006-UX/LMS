@@ -1,0 +1,92 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto space-y-6">
+    
+    <!-- Header -->
+    <div class="border-b border-gray-200 dark:border-gray-700 pb-4">
+        <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Waitlist Queue</h1>
+        <p class="text-sm text-gray-500 dark:text-gray-400">Manage students waiting for out-of-stock books. (Strict First-In, First-Out)</p>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        
+        <!-- LEFT COLUMN: Manual Add to Queue Form -->
+        <div class="col-span-1">
+            <form action="{{ url_for('reservations.add_to_queue') }}" method="POST" class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 space-y-4">
+                <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-2">Add to Waitlist</h3>
+                
+                <div>
+                    <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Select Member</label>
+                    <select name="member_id" required class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                        <option value="" disabled selected>Choose a member...</option>
+                        {% for member in members %}
+                            <option value="{{ member.id }}">{{ member.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <div>
+                    <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Select Book</label>
+                    <select name="book_id" required class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                        <option value="" disabled selected>Choose an out-of-stock book...</option>
+                        {% for book in books %}
+                            <option value="{{ book.id }}">{{ book.title }} ({{ book.available_copies }} available)</option>
+                        {% endfor %}
+                    </select>
+                    <p class="mt-1 text-xs text-gray-500">System will automatically reject if copies are available.</p>
+                </div>
+
+                <button type="submit" class="w-full text-white bg-blue-600 hover:bg-blue-700 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-blue-600 dark:hover:bg-blue-700 transition-colors">
+                    Join Queue
+                </button>
+            </form>
+        </div>
+
+        <!-- RIGHT COLUMN: Active Queue Table -->
+        <div class="col-span-1 lg:col-span-2">
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+                <table class="w-full text-sm text-left text-gray-500 dark:text-gray-400">
+                    <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
+                        <tr>
+                            <th scope="col" class="px-6 py-3">Book Title</th>
+                            <th scope="col" class="px-6 py-3">Waiting Member</th>
+                            <th scope="col" class="px-6 py-3">Status</th>
+                            <th scope="col" class="px-6 py-3">Queued Since</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for entry in queue %}
+                        <tr class="border-b dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
+                            <td class="px-6 py-4 font-medium text-gray-900 dark:text-white">{{ entry.book_title }}</td>
+                            <td class="px-6 py-4">
+                                <div class="font-bold text-gray-900 dark:text-white">{{ entry.member_name }}</div>
+                                <div class="text-xs text-gray-500">{{ entry.member_tier | title }}</div>
+                            </td>
+                            <td class="px-6 py-4">
+                                {% if entry.status == 'waiting' %}
+                                    <span class="bg-yellow-100 text-yellow-800 text-xs font-medium px-2.5 py-0.5 rounded dark:bg-yellow-900 dark:text-yellow-300">In Line</span>
+                                {% else %}
+                                    <span class="bg-green-100 text-green-800 text-xs font-medium px-2.5 py-0.5 rounded dark:bg-green-900 dark:text-green-300">Notified (Ready)</span>
+                                {% endif %}
+                            </td>
+                            <td class="px-6 py-4 text-xs">{{ entry.queued_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="4" class="px-6 py-12 text-center">
+                                <div class="flex flex-col items-center justify-center text-gray-500">
+                                    <svg class="w-10 h-10 mb-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                    <p>The queue is empty. All students have the books they need!</p>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+    </div>
+</div>
+{% endblock %}
