@@ -3,6 +3,8 @@ from app.models.reservation import Reservation
 from app.models.book import Book, BookCopy
 from app.models.user import User
 from app.models.transaction import Transaction
+from datetime import datetime, timedelta
+from app.services.notification_service import NotificationService
 
 class ReservationService:
     """
@@ -60,3 +62,33 @@ class ReservationService:
         except Exception as e:
             db.session.rollback()
             return {"success": False, "error": f"Database error: {str(e)}"}
+
+    @staticmethod
+    def notify_next_in_queue(book_id: int):
+        """Finds the next person in the waitlist, marks them notified, and sends an email."""
+        # Find next waiting reservation, ordered by fairness score and time
+        next_res = db.session.execute(
+            db.select(Reservation)
+            .where(Reservation.book_id == book_id, Reservation.status == 'waiting')
+            .order_by(Reservation.fairness_score.desc(), Reservation.queued_at.asc())
+            .with_for_update(skip_locked=True)
+            .limit(1)
+        ).scalar_one_or_none()
+
+        if next_res:
+            # 1. Update the database state
+            next_res.status = 'notified'
+            next_res.notified_at = datetime.utcnow()
+            next_res.expires_at = datetime.utcnow() + timedelta(hours=48)
+
+            # 2. Fetch details for the email
+            member = User.query.get(next_res.member_id)
+            book = Book.query.get(book_id)
+
+            # 3. Send the automated email!
+            NotificationService.send_reservation_ready(member, book)
+            
+            db.session.commit()
+            return True
+            
+        return False   

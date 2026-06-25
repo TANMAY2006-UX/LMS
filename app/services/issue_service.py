@@ -6,6 +6,7 @@ from app.models.audit import AuditLog
 from datetime import datetime, timedelta
 from app.services.fine_service import FineService
 from app.services.goal_service import GoalService
+from app.models.transaction import Fine
 
 class IssueService:
     """
@@ -158,7 +159,10 @@ class IssueService:
             
             # Now trigger the side-effect to increase the progress bar
             GoalService.increment_read_count(txn.member_id)
-            
+            # Check if anyone is waiting for this book and notify them!
+            from app.services.reservation_service import ReservationService
+            ReservationService.notify_next_in_queue(book.id)
+
             return {"success": True, "transaction": txn}
 
         except Exception as e:

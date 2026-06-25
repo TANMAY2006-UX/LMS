@@ -1,16 +1,17 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Libra LMS | Admin</title>
-    
+
     <script src="https://cdn.tailwindcss.com"></script>
-    
+
     <link href="https://cdnjs.cloudflare.com/ajax/libs/flowbite/2.3.0/flowbite.min.css" rel="stylesheet" />
 
     <script src="https://unpkg.com/htmx.org@1.9.10"></script>
-    
+
     <!-- CSS to hide the HTMX loading spinner when not searching -->
     <style>
         .htmx-indicator {
@@ -18,46 +19,69 @@
             transition: opacity 200ms ease-in;
             pointer-events: none;
         }
+
         .htmx-request .htmx-indicator {
             opacity: 1;
         }
+
         .htmx-request.htmx-indicator {
             opacity: 1;
         }
     </style>
 </head>
+
 <body class="bg-gray-50 dark:bg-gray-900 antialiased">
 
-    <nav class="bg-white border-b border-gray-200 px-4 py-2.5 dark:bg-gray-800 dark:border-gray-700 fixed left-0 right-0 top-0 z-50">
+    <nav
+        class="bg-white border-b border-gray-200 px-4 py-2.5 dark:bg-gray-800 dark:border-gray-700 fixed left-0 right-0 top-0 z-50">
         <div class="flex flex-wrap justify-between items-center">
             <div class="flex justify-start items-center">
-                <button data-drawer-target="drawer-navigation" data-drawer-toggle="drawer-navigation" aria-controls="drawer-navigation" class="p-2 mr-2 text-gray-600 rounded-lg cursor-pointer md:hidden hover:text-gray-900 hover:bg-gray-100 focus:bg-gray-100 dark:focus:bg-gray-700 focus:ring-2 focus:ring-gray-100 dark:focus:ring-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white">
-                    <svg aria-hidden="true" class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M3 5a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM3 10a1 1 0 011-1h6a1 1 0 110 2H4a1 1 0 01-1-1zM3 15a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clip-rule="evenodd"></path></svg>
+                <button data-drawer-target="drawer-navigation" data-drawer-toggle="drawer-navigation"
+                    aria-controls="drawer-navigation"
+                    class="p-2 mr-2 text-gray-600 rounded-lg cursor-pointer md:hidden hover:text-gray-900 hover:bg-gray-100 focus:bg-gray-100 dark:focus:bg-gray-700 focus:ring-2 focus:ring-gray-100 dark:focus:ring-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white">
+                    <svg aria-hidden="true" class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20"
+                        xmlns="http://www.w3.org/2000/svg">
+                        <path fill-rule="evenodd"
+                            d="M3 5a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM3 10a1 1 0 011-1h6a1 1 0 110 2H4a1 1 0 01-1-1zM3 15a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z"
+                            clip-rule="evenodd"></path>
+                    </svg>
                 </button>
                 <a href="#" class="flex items-center justify-between mr-4">
-                    <span class="self-center text-2xl font-bold whitespace-nowrap dark:text-white text-blue-600">📚 Libra LMS</span>
+                    <span class="self-center text-2xl font-bold whitespace-nowrap dark:text-white text-blue-600">📚
+                        Libra LMS</span>
                 </a>
             </div>
-            
+
             <div class="flex items-center lg:order-2">
                 {% if current_user.is_authenticated %}
-                <button type="button" class="flex mx-3 text-sm bg-gray-800 rounded-full md:mr-0 focus:ring-4 focus:ring-gray-300 dark:focus:ring-gray-600" id="user-menu-button" aria-expanded="false" data-dropdown-toggle="dropdown">
+                <button type="button"
+                    class="flex mx-3 text-sm bg-gray-800 rounded-full md:mr-0 focus:ring-4 focus:ring-gray-300 dark:focus:ring-gray-600"
+                    id="user-menu-button" aria-expanded="false" data-dropdown-toggle="dropdown">
                     <span class="sr-only">Open user menu</span>
                     <div class="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center text-white font-bold">
                         {{ current_user.name[0] | upper }}
                     </div>
                 </button>
-                <div class="hidden z-50 my-4 w-56 text-base list-none bg-white rounded divide-y divide-gray-100 shadow dark:bg-gray-700 dark:divide-gray-600" id="dropdown">
+                <div class="hidden z-50 my-4 w-56 text-base list-none bg-white rounded divide-y divide-gray-100 shadow dark:bg-gray-700 dark:divide-gray-600"
+                    id="dropdown">
                     <div class="py-3 px-4">
-                        <span class="block text-sm font-semibold text-gray-900 dark:text-white">{{ current_user.name }}</span>
-                        <span class="block text-sm text-gray-500 truncate dark:text-gray-400">{{ current_user.email }}</span>
-                        <span class="bg-blue-100 text-blue-800 text-xs font-medium mr-2 px-2.5 py-0.5 rounded dark:bg-blue-900 dark:text-blue-300">{{ current_user.role | upper }}</span>
+                        <span class="block text-sm font-semibold text-gray-900 dark:text-white">{{ current_user.name
+                            }}</span>
+                        <span class="block text-sm text-gray-500 truncate dark:text-gray-400">{{ current_user.email
+                            }}</span>
+                        <span
+                            class="bg-blue-100 text-blue-800 text-xs font-medium mr-2 px-2.5 py-0.5 rounded dark:bg-blue-900 dark:text-blue-300">{{
+                            current_user.role | upper }}</span>
                     </div>
                     <ul class="py-1 text-gray-700 dark:text-gray-300" aria-labelledby="dropdown">
-                        <li><a href="#" class="block py-2 px-4 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white">My Profile</a></li>
+                        <li><a href="#"
+                                class="block py-2 px-4 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white">My
+                                Profile</a></li>
                     </ul>
                     <ul class="py-1 text-gray-700 dark:text-gray-300" aria-labelledby="dropdown">
-                        <li><a href="{{ url_for('auth.logout') }}" class="block py-2 px-4 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white text-red-600">Sign out</a></li>
+                        <li><a href="{{ url_for('auth.logout') }}"
+                                class="block py-2 px-4 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white text-red-600">Sign
+                                out</a></li>
                     </ul>
                 </div>
                 {% endif %}
@@ -65,37 +89,72 @@
         </div>
     </nav>
 
-    <aside class="fixed top-0 left-0 z-40 w-64 h-screen pt-14 transition-transform -translate-x-full bg-white border-r border-gray-200 md:translate-x-0 dark:bg-gray-800 dark:border-gray-700" aria-label="Sidenav" id="drawer-navigation">
+    <aside
+        class="fixed top-0 left-0 z-40 w-64 h-screen pt-14 transition-transform -translate-x-full bg-white border-r border-gray-200 md:translate-x-0 dark:bg-gray-800 dark:border-gray-700"
+        aria-label="Sidenav" id="drawer-navigation">
         <div class="overflow-y-auto py-5 px-3 h-full bg-white dark:bg-gray-800">
             <ul class="space-y-2">
+                <!-- 1. General Dashboard -->
                 <li>
-                    <a href="#" class="flex items-center p-2 text-base font-medium text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group">
-                        <span class="ml-3">📊 Dashboard</span>
+                    <a href="{{ url_for('main.dashboard') }}"
+                        class="flex items-center p-2 text-base font-medium text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group">
+                        <span class="ml-3">📊 Home Dashboard</span>
+                    </a>
+                </li>
+
+                <!-- 2. Admin Only Features -->
+                {% if current_user.role == 'admin' %}
+                <li>
+                    <a href="{{ url_for('admin.analytics_dashboard') }}"
+                        class="flex items-center p-2 text-base font-medium text-purple-600 rounded-lg dark:text-purple-400 hover:bg-gray-100 dark:hover:bg-gray-700 group">
+                        <span class="ml-3">📈 Analytics & Bulk Mail</span>
                     </a>
                 </li>
                 <li>
-                    <a href="#" class="flex items-center p-2 text-base font-medium text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group">
+                    <a href="{{ url_for('admin.manage_policies') }}"
+                        class="flex items-center p-2 text-base font-medium text-purple-600 rounded-lg dark:text-purple-400 hover:bg-gray-100 dark:hover:bg-gray-700 group">
+                        <span class="ml-3">⚙️ Fine Policies</span>
+                    </a>
+                </li>
+                {% endif %}
+
+                <!-- 3. Core Library Operations -->
+                <li>
+                    <a href="{{ url_for('books.index') }}"
+                        class="flex items-center p-2 text-base font-medium text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group">
                         <span class="ml-3">📖 Books & Inventory</span>
                     </a>
                 </li>
                 <li>
-                    <a href="#" class="flex items-center p-2 text-base font-medium text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group">
-                        <span class="ml-3">🔄 Issue & Return</span>
+                    <a href="{{ url_for('transactions.issue_book') }}"
+                        class="flex items-center p-2 text-base font-medium text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group">
+                        <span class="ml-3">📤 Issue Book</span>
                     </a>
                 </li>
                 <li>
-                    <a href="#" class="flex items-center p-2 text-base font-medium text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group">
-                        <span class="ml-3">👥 Members</span>
+                    <a href="{{ url_for('transactions.return_book') }}"
+                        class="flex items-center p-2 text-base font-medium text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group">
+                        <span class="ml-3">📥 Process Returns</span>
                     </a>
                 </li>
+
+                <!-- 4. Management & Fines -->
                 <li>
-                    <a href="#" class="flex items-center p-2 text-base font-medium text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group">
+                    <a href="{{ url_for('reservations.index') }}"
+                        class="flex items-center p-2 text-base font-medium text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group">
                         <span class="ml-3">⏳ Waitlist (Queue)</span>
                     </a>
                 </li>
                 <li>
-                    <a href="#" class="flex items-center p-2 text-base font-medium text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group">
-                        <span class="ml-3">💰 Fines & Billing</span>
+                    <a href="{{ url_for('fines.index') }}"
+                        class="flex items-center p-2 text-base font-medium text-red-600 rounded-lg dark:text-red-400 hover:bg-gray-100 dark:hover:bg-gray-700 group">
+                        <span class="ml-3">💰 Fines Management</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="{{ url_for('members.index') }}"
+                        class="flex items-center p-2 text-base font-medium text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group">
+                        <span class="ml-3">👥 Members</span>
                     </a>
                 </li>
             </ul>
@@ -103,23 +162,25 @@
     </aside>
 
     <main class="p-4 md:ml-64 h-auto pt-20">
-        
+
         {% with messages = get_flashed_messages(with_categories=true) %}
-            {% if messages %}
-                <div class="mb-4 space-y-2">
-                    {% for category, message in messages %}
-                        <div class="p-4 mb-4 text-sm rounded-lg {% if category == 'error' %}text-red-800 bg-red-50 dark:bg-gray-800 dark:text-red-400{% else %}text-green-800 bg-green-50 dark:bg-gray-800 dark:text-green-400{% endif %}" role="alert">
-                            <span class="font-medium">{{ message }}</span>
-                        </div>
-                    {% endfor %}
-                </div>
-            {% endif %}
+        {% if messages %}
+        <div class="mb-4 space-y-2">
+            {% for category, message in messages %}
+            <div class="p-4 mb-4 text-sm rounded-lg {% if category == 'error' %}text-red-800 bg-red-50 dark:bg-gray-800 dark:text-red-400{% else %}text-green-800 bg-green-50 dark:bg-gray-800 dark:text-green-400{% endif %}"
+                role="alert">
+                <span class="font-medium">{{ message }}</span>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
         {% endwith %}
 
         {% block content %}{% endblock %}
-        
+
     </main>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/flowbite/2.3.0/flowbite.min.js"></script>
 </body>
+
 </html>

@@ -11,6 +11,7 @@ from app.routes.fines import fines_bp
 from app.routes.reservations import reservations_bp
 from app.routes.qr import qr_bp
 from app import models
+from app.routes.admin import admin_bp
 
 def create_app(config_class=Config):
     """The Application Factory pattern."""
@@ -48,5 +49,7 @@ def create_app(config_class=Config):
     app.register_blueprint(reservations_bp)
 
     app.register_blueprint(qr_bp)
+
+    app.register_blueprint(admin_bp)
     
     return app

@@ -9,25 +9,29 @@
     </div>
 
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        
+
         <!-- LEFT COLUMN: Add Member Form -->
         <div class="col-span-1">
-            <form action="{{ url_for('members.index') }}" method="POST" class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 space-y-4">
+            <form action="{{ url_for('members.index') }}" method="POST"
+                class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 space-y-4">
                 <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-2">Register New Member</h3>
-                
+
                 <div>
                     <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Full Name</label>
-                    <input type="text" name="name" required class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                    <input type="text" name="name" required
+                        class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
                 </div>
-                
+
                 <div>
                     <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Email Address</label>
-                    <input type="email" name="email" required class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                    <input type="email" name="email" required
+                        class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
                 </div>
-                
+
                 <div>
                     <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Member Tier</label>
-                    <select name="tier" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                    <select name="tier"
+                        class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
                         <option value="student">Student</option>
                         <option value="faculty">Faculty</option>
                         <option value="staff">Staff</option>
@@ -35,11 +39,14 @@
                 </div>
 
                 <div>
-                    <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Temporary Password</label>
-                    <input type="password" name="password" required class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                    <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Temporary
+                        Password</label>
+                    <input type="password" name="password" required
+                        class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
                 </div>
 
-                <button type="submit" class="w-full text-white bg-blue-600 hover:bg-blue-700 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">
+                <button type="submit"
+                    class="w-full text-white bg-blue-600 hover:bg-blue-700 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">
                     Create Account
                 </button>
             </form>
@@ -47,7 +54,8 @@
 
         <!-- RIGHT COLUMN: Member Table -->
         <div class="col-span-1 lg:col-span-2">
-            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+            <div
+                class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
                 <table class="w-full text-sm text-left text-gray-500 dark:text-gray-400">
                     <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
                         <tr>
@@ -61,24 +69,41 @@
                         {% for member in members %}
                         <tr class="border-b dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
                             <td class="px-6 py-4">
-                                <div class="font-medium text-gray-900 dark:text-white">{{ member.name }}</div>
+                                <div class="font-medium text-gray-900 dark:text-white flex items-center gap-2">
+                                    {{ member.name }}
+
+                                    {% if velocity_flags[member.id] %}
+                                    <span
+                                        class="bg-red-100 text-red-800 text-[10px] font-bold px-2 py-0.5 rounded-full border border-red-200 dark:bg-red-900/30 dark:text-red-400 dark:border-red-800"
+                                        title="This member has borrowed >3x their average this week.">
+                                        High Velocity Risk ⚠️
+                                    </span>
+                                    {% endif %}
+                                </div>
                                 <div class="text-xs text-gray-500">{{ member.email }}</div>
                             </td>
                             <td class="px-6 py-4">
                                 {% if member.tier == 'student' %}
-                                    <span class="bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded dark:bg-blue-900 dark:text-blue-300">Student</span>
+                                <span
+                                    class="bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded dark:bg-blue-900 dark:text-blue-300">Student</span>
                                 {% elif member.tier == 'faculty' %}
-                                    <span class="bg-purple-100 text-purple-800 text-xs font-medium px-2.5 py-0.5 rounded dark:bg-purple-900 dark:text-purple-300">Faculty</span>
+                                <span
+                                    class="bg-purple-100 text-purple-800 text-xs font-medium px-2.5 py-0.5 rounded dark:bg-purple-900 dark:text-purple-300">Faculty</span>
                                 {% else %}
-                                    <span class="bg-gray-100 text-gray-800 text-xs font-medium px-2.5 py-0.5 rounded dark:bg-gray-700 dark:text-gray-300">Staff</span>
+                                <span
+                                    class="bg-gray-100 text-gray-800 text-xs font-medium px-2.5 py-0.5 rounded dark:bg-gray-700 dark:text-gray-300">Staff</span>
                                 {% endif %}
                             </td>
                             <td class="px-6 py-4">{{ member.joined_date.strftime('%Y-%m-%d') }}</td>
                             <td class="px-6 py-4">
                                 {% if member.is_active %}
-                                    <div class="flex items-center"><div class="h-2.5 w-2.5 rounded-full bg-green-500 mr-2"></div>Active</div>
+                                <div class="flex items-center">
+                                    <div class="h-2.5 w-2.5 rounded-full bg-green-500 mr-2"></div>Active
+                                </div>
                                 {% else %}
-                                    <div class="flex items-center"><div class="h-2.5 w-2.5 rounded-full bg-red-500 mr-2"></div>Inactive</div>
+                                <div class="flex items-center">
+                                    <div class="h-2.5 w-2.5 rounded-full bg-red-500 mr-2"></div>Inactive
+                                </div>
                                 {% endif %}
                             </td>
                         </tr>
@@ -93,7 +118,7 @@
                 </table>
             </div>
         </div>
-        
+
     </div>
 </div>
 {% endblock %}

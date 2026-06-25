@@ -76,3 +76,58 @@ class AnalyticsService:
             recommended_books.extend([b for b, count in fallback_books])
 
         return recommended_books
+
+    @staticmethod
+    def get_borrowing_velocity_flag(member_id: int) -> bool:
+        """
+        Calculates if a member is borrowing > 3x their monthly average in one week.
+        Returns True if velocity is anomalously high.
+        """
+        from datetime import datetime, timedelta
+        
+        thirty_days_ago = datetime.utcnow() - timedelta(days=30)
+        seven_days_ago = datetime.utcnow() - timedelta(days=7)
+
+        # Total borrows in last 30 days
+        past_month_borrows = db.session.query(func.count(Transaction.id)).filter(
+            Transaction.member_id == member_id,
+            Transaction.issued_at >= thirty_days_ago
+        ).scalar() or 0
+
+        # Total borrows in last 7 days
+        past_week_borrows = db.session.query(func.count(Transaction.id)).filter(
+            Transaction.member_id == member_id,
+            Transaction.issued_at >= seven_days_ago
+        ).scalar() or 0
+
+        # Average weekly borrows over the last month
+        avg_weekly = past_month_borrows / 4.0 if past_month_borrows > 0 else 0.0
+        
+        # Flag if they borrowed 3x their average this week (and have actually borrowed > 2 books)
+        if avg_weekly > 0 and past_week_borrows >= (avg_weekly * 3) and past_week_borrows > 2:
+            return True
+            
+        return False
+
+    @staticmethod
+    def get_dashboard_chart_data():
+        """Aggregates data for Chart.js admin dashboard."""
+        from app.models.book import Category
+        
+        # 1. Borrowing by Category (Pie Chart)
+        category_stats = db.session.query(
+            Category.name, func.count(Transaction.id)
+        ).select_from(Transaction).join(
+            BookCopy, Transaction.copy_id == BookCopy.id
+        ).join(
+            Book, BookCopy.book_id == Book.id
+        ).join(
+            Category, Book.category_id == Category.id
+        ).group_by(Category.name).all()
+
+        return {
+            "categories": {
+                "labels": [stat[0] for stat in category_stats],
+                "data": [stat[1] for stat in category_stats]
+            }
+        }

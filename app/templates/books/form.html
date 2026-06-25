@@ -76,6 +76,16 @@
                         required>
                 </div>
 
+                <div>
+                    <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Category</label>
+                    <select name="category_id" id="category_id" required class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                        <option value="" disabled selected>Select a category...</option>
+                        {% for category in categories %}
+                            <option value="{{ category.id }}">{{ category.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
                 <div class="grid grid-cols-2 gap-4">
                     <div>
                         <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Publisher</label>
@@ -107,6 +117,8 @@
 
             </div>
         </div>
+
+
 
         <div class="mt-8 border-t border-gray-200 dark:border-gray-700 pt-6 flex justify-end">
             <button type="submit"
@@ -148,6 +160,11 @@
                 document.getElementById('author').value = result.data.author || '';
                 document.getElementById('publisher').value = result.data.publisher || '';
                 document.getElementById('published_year').value = result.data.published_year || '';
+
+                // Check if OpenLibrary gave us a suggested category
+                if (result.data.suggested_category) {
+                    statusText.innerText = `✅ Data loaded! OpenLibrary suggests this is: "${result.data.suggested_category}". Please select your closest matching official category.`;
+                }
 
                 // Handle Cover Image
                 if (result.data.cover_url) {

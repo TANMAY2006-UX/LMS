@@ -1,6 +1,7 @@
 from flask import Blueprint, render_template, request, flash, redirect, url_for
 from flask_login import login_required
 from app.services.member_service import MemberService
+from app.services.analytics_service import AnalyticsService
 
 # Import our VIP bouncer
 try:
@@ -39,4 +40,9 @@ def index():
 
     # If GET request, just fetch the list and show the page
     members = MemberService.get_all_members()
-    return render_template('members/index.html', members=members)
+
+    # This creates a dictionary mapping member IDs to True/False for the velocity flag
+    velocity_flags = {m.id: AnalyticsService.get_borrowing_velocity_flag(m.id) for m in members}
+    
+    # Pass the new dictionary to the template
+    return render_template('members/index.html', members=members, velocity_flags=velocity_flags)

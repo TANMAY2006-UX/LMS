@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="max-w-7xl mx-auto space-y-6">
+    <div class="border-b border-gray-200 dark:border-gray-700 pb-4 flex justify-between items-center">
+        <div>
+            <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Analytics Dashboard</h1>
+            <p class="text-sm text-gray-500">Library health and borrowing trends.</p>
+        </div>
+        <div class="space-x-2">
+            <a href="{{ url_for('admin.export_overdue_csv') }}"
+                class="text-white bg-green-600 hover:bg-green-700 font-medium rounded-lg text-sm px-4 py-2">Download
+                Overdue CSV</a>
+            <form action="{{ url_for('admin.batch_reminders') }}" method="POST" class="inline">
+                <button type="submit" onclick="return confirm('Send reminder emails to ALL overdue users?');"
+                    class="text-white bg-blue-600 hover:bg-blue-700 font-medium rounded-lg text-sm px-4 py-2">Batch
+                    Reminders Email</button>
+            </form>
+        </div>
+    </div>
+
+    <div
+        class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 w-full md:w-1/2">
+        <h3 class="text-lg font-bold mb-4">Borrowing by Category</h3>
+        <canvas id="categoryChart"></canvas>
+    </div>
+</div>
+
+<div class="mt-8 bg-white dark:bg-gray-800 p-6 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
+    <div class="flex justify-between items-center mb-4">
+        <h3 class="text-lg font-bold text-gray-900 dark:text-white">Batch Overdue Communications</h3>
+        <!-- The Button is now here, safely next to the data! -->
+        <form action="{{ url_for('admin.batch_reminders') }}" method="POST">
+            <button type="submit" {% if not preview_list %}disabled{% endif %}
+                class="text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50 font-medium rounded-lg text-sm px-4 py-2 flex items-center">
+                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z">
+                    </path>
+                </svg>
+                Send Reminders to {{ preview_list|length }} Users
+            </button>
+        </form>
+    </div>
+
+    <div class="overflow-x-auto">
+        <table class="w-full text-sm text-left text-gray-500">
+            <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
+                <tr>
+                    <th>Member</th>
+                    <th>Email</th>
+                    <th>Book Title</th>
+                    <th>Due Date</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in preview_list %}
+                <tr class="border-b dark:border-gray-700">
+                    <td class="px-6 py-3 font-medium text-gray-900 dark:text-white">{{ item.name }}</td>
+                    <td class="px-6 py-3">{{ item.email }}</td>
+                    <td class="px-6 py-3 text-red-600">{{ item.book }}</td>
+                    <td class="px-6 py-3">{{ item.due.strftime('%Y-%m-%d') }}</td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="4" class="px-6 py-4 text-center text-gray-500">No overdue books right now!</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    // 1. Safely parse the entire Python dictionary into a Javascript object
+    const analyticsData = {{ chart_data | tojson | safe }};
+    
+    // 2. Setup the chart
+    const ctx = document.getElementById('categoryChart').getContext('2d');
+    new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            // 3. Use pure JavaScript to access the data now! No more Jinja brackets here.
+            labels: analyticsData.categories.labels,
+            datasets: [{
+                data: analyticsData.categories.data,
+                backgroundColor: ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'],
+                borderWidth: 1
+            }]
+        },
+        options: { responsive: true }
+    });
+</script>
+{% endblock %}

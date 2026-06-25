@@ -4,6 +4,7 @@ from flask_login import login_required, current_user
 from app.services.book_service import BookService
 from app.services.analytics_service import AnalyticsService
 from app.models.book import Book
+from app.models.book import Category
 
 # app.utils was created earlier with role_required
 try:
@@ -27,11 +28,12 @@ def index():
     if search_query:
         # If there's a search term, filter the books
         search_pattern = f"%{search_query}%"
-        books = Book.query.filter(
+        books = Book.query.outerjoin(Category).filter(
             db.or_(
                 Book.title.ilike(search_pattern),
                 Book.author.ilike(search_pattern),
-                Book.isbn.ilike(search_pattern)
+                Book.isbn.ilike(search_pattern),
+                Category.name.ilike(search_pattern)
             )
         ).order_by(Book.title).all()
     else:
@@ -105,6 +107,7 @@ def add_book():
         form_data = {
             'isbn': request.form.get('isbn'),
             'title': request.form.get('title'),
+            'category_id': request.form.get('category_id'),
             'author': request.form.get('author'),
             'publisher': request.form.get('publisher'),
             'published_year': request.form.get('published_year'),
@@ -124,8 +127,8 @@ def add_book():
         else:
             flash(result['error'], 'error')
             
-    # If it's just a GET request, show the blank form
-    return render_template('books/form.html')
+    categories = Category.query.all()
+    return render_template('books/form.html', categories=categories)
 
 @books_bp.route('/api/fetch-isbn', methods=['GET'])
 @login_required

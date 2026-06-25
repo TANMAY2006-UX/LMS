@@ -44,7 +44,7 @@ class BookService:
         url = f"https://openlibrary.org/api/books?bibkeys=ISBN:{clean_isbn}&jscmd=data&format=json"
         
         try:
-            response = requests.get(url, timeout=5)
+            response = requests.get(url, timeout=15)
             response.raise_for_status()
             data = response.json()
             
@@ -80,6 +80,12 @@ class BookService:
                 # If 'large' is missing, fallback to 'medium' or 'small'
                 cover_url = cover_data.get('large') or cover_data.get('medium') or cover_data.get('small') or ""
 
+            subjects = book_data.get('subjects', [])
+            suggested_category = ""
+            if subjects and isinstance(subjects, list):
+                # Grab the name of the very first subject they provide
+                suggested_category = subjects[0].get('name', '')
+
             # Safely extract description (OpenLibrary sometimes uses a string, sometimes a dict)
             raw_desc = book_data.get('description', '')
             description = raw_desc.get('value', '') if isinstance(raw_desc, dict) else raw_desc
@@ -95,7 +101,8 @@ class BookService:
                     "publisher": book_data.get('publishers', [{'name': ''}])[0]['name'],
                     "published_year": published_year,
                     "cover_url": book_data.get('cover', {}).get('large', ''),
-                    "description": description
+                    "description": description,
+                    "suggested_category": suggested_category
                 }
             }
         except requests.RequestException:
@@ -106,11 +113,14 @@ class BookService:
         """Saves a new book AND its physical copies into the PostgreSQL database."""
         try:
             # 1. Create a default category if none exists (for MVP speed)
-            category = Category.query.filter_by(slug='uncategorized').first()
-            if not category:
-                category = Category(name='Uncategorized', slug='uncategorized')
-                db.session.add(category)
-                db.session.flush() # Get the ID without committing yet
+            cat_id = data.get('category_id')
+            if not cat_id:
+                category = Category.query.filter_by(slug='uncategorized').first()
+                if not category:
+                    category = Category(name='Uncategorized', slug='uncategorized')
+                    db.session.add(category)
+                    db.session.flush()
+                cat_id = category.id
 
             # 2. Prevent duplicate ISBNs
             existing_book = Book.query.filter_by(isbn=data['isbn']).first()
@@ -121,13 +131,13 @@ class BookService:
             book = Book(
                 isbn=data['isbn'],
                 title=data['title'],
+                category_id=cat_id,
                 author=data['author'],
                 description=data.get('description', ''),
                 publisher=data.get('publisher', ''),
                 # Handle empty strings from the form safely
                 published_year=int(data['published_year']) if data.get('published_year') else None,
                 cover_url=data.get('cover_url', ''),
-                category_id=category.id,
                 total_copies=int(data['initial_copies']),
                 available_copies=int(data['initial_copies']),
                 created_by=user_id
