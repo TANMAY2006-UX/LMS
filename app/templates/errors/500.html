@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+
+{% block title %}500 Server Error — Libra{% endblock %}
+{% block page_title %}{% endblock %}
+
+{% block content %}
+<style>
+    @keyframes pulseError {
+        0% { opacity: 0.7; transform: scale(1); }
+        50% { opacity: 1; transform: scale(1.05); }
+        100% { opacity: 0.7; transform: scale(1); }
+    }
+    .error-icon {
+        animation: pulseError 4s ease-in-out infinite;
+        width: 64px; height: 64px;
+        margin: 0 auto 24px auto;
+    }
+    .error-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        min-height: 60vh;
+        text-align: center;
+    }
+</style>
+
+<div class="error-container page-transition">
+    <svg class="error-icon" viewBox="0 0 24 24" fill="none" stroke="var(--warning)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="10"></circle>
+        <line x1="12" y1="8" x2="12" y2="12"></line>
+        <line x1="12" y1="16" x2="12.01" y2="16"></line>
+    </svg>
+    
+    <h1 style="font-size: 24px; font-weight: 600; color: var(--text-primary); margin-bottom: 8px; letter-spacing: -0.02em;">Our librarians are restoring order.</h1>
+    
+    <p style="color: var(--text-secondary); max-width: 420px; margin-bottom: 32px; font-size: 15px; line-height: 1.6;">
+        Error 500. A systemic issue has occurred within the institutional archives. The administration has been notified.
+    </p>
+
+    <a href="{{ url_for('main.dashboard') }}" class="btn btn-primary" style="padding: 10px 20px;">
+        <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+        Return to Dashboard
+    </a>
+</div>
+{% endblock %}

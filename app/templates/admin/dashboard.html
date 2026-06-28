@@ -1,94 +1,199 @@
 {% extends "base.html" %}
+
+{% block page_title %}Analytics & Operations{% endblock %}
+
 {% block content %}
-<div class="max-w-7xl mx-auto space-y-6">
-    <div class="border-b border-gray-200 dark:border-gray-700 pb-4 flex justify-between items-center">
+<div style="max-width: 1200px; margin: 0 auto; display: flex; flex-direction: column; gap: 32px;">
+    
+    <!-- Header -->
+    <div class="page-header" style="display: flex; justify-content: space-between; align-items: flex-end;">
         <div>
-            <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Analytics Dashboard</h1>
-            <p class="text-sm text-gray-500">Library health and borrowing trends.</p>
+            <h1>Analytics Command Center</h1>
+            <p>Library health, borrowing trends, and operational insights.</p>
         </div>
-        <div class="space-x-2">
-            <a href="{{ url_for('admin.export_overdue_csv') }}"
-                class="text-white bg-green-600 hover:bg-green-700 font-medium rounded-lg text-sm px-4 py-2">Download
-                Overdue CSV</a>
-            <form action="{{ url_for('admin.batch_reminders') }}" method="POST" class="inline">
-                <button type="submit" onclick="return confirm('Send reminder emails to ALL overdue users?');"
-                    class="text-white bg-blue-600 hover:bg-blue-700 font-medium rounded-lg text-sm px-4 py-2">Batch
-                    Reminders Email</button>
+        <div style="display: flex; gap: 12px;">
+            <a href="{{ url_for('admin.export_overdue_csv') }}" class="btn btn-secondary">
+                <svg viewBox="0 0 24 24" style="width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2;">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                    <polyline points="7 10 12 15 17 10"></polyline>
+                    <line x1="12" y1="15" x2="12" y2="3"></line>
+                </svg>
+                Export CSV
+            </a>
+            <form action="{{ url_for('admin.batch_reminders') }}" method="POST" style="margin: 0;">
+                <button type="submit" onclick="return confirm('Send reminder emails to ALL overdue users?');" class="btn btn-primary" {% if not preview_list %}disabled{% endif %}>
+                    <svg viewBox="0 0 24 24" style="width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2;">
+                        <line x1="22" y1="2" x2="11" y2="13"></line>
+                        <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                    </svg>
+                    Batch Reminders
+                </button>
             </form>
         </div>
     </div>
 
-    <div
-        class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 w-full md:w-1/2">
-        <h3 class="text-lg font-bold mb-4">Borrowing by Category</h3>
-        <canvas id="categoryChart"></canvas>
+    <!-- Analytics Cards -->
+    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px;">
+        
+        <!-- Timeline -->
+        <div class="card" style="padding: 24px;">
+            <h3 class="section-title">Borrowing Activity (7 Days)</h3>
+            <div style="height: 200px; width: 100%; position: relative;">
+                <canvas id="timelineChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Tiers -->
+        <div class="card" style="padding: 24px;">
+            <h3 class="section-title">Borrowing by Tier</h3>
+            <div style="height: 200px; width: 100%; position: relative;">
+                <canvas id="tierChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Categories -->
+        <div class="card" style="padding: 24px;">
+            <h3 class="section-title">Borrowing by Genre</h3>
+            <div style="height: 200px; width: 100%; position: relative; display: flex; justify-content: center;">
+                <canvas id="categoryChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Operations Section -->
+    <div class="card" style="padding: 24px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+            <h3 class="section-title" style="margin: 0;">Overdue Communications Queue</h3>
+            <span class="badge badge-danger">{{ preview_list|length }} Actionable</span>
+        </div>
+
+        <div class="table-wrap">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Member</th>
+                        <th>Email Contact</th>
+                        <th>Book Title</th>
+                        <th>Due Date</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in preview_list %}
+                    <tr>
+                        <td><div style="font-weight: 500; color: var(--text-primary);">{{ item.name }}</div></td>
+                        <td><div style="color: var(--text-secondary); font-size: 13px;">{{ item.email }}</div></td>
+                        <td><div style="font-weight: 500; color: var(--text-primary);">{{ item.book }}</div></td>
+                        <td>
+                            <span class="badge badge-danger">{{ item.due.strftime('%b %d, %Y') }}</span>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="4">
+                            <div class="empty-state" style="padding: 32px;">
+                                <svg viewBox="0 0 24 24" style="stroke: var(--success);"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                                <div style="font-weight: 500; color: var(--text-primary); margin-top: 8px;">Zero Overdue Books</div>
+                                <div style="font-size: 12px; margin-top: 4px;">No communications required today.</div>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
     </div>
 </div>
 
-<div class="mt-8 bg-white dark:bg-gray-800 p-6 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
-    <div class="flex justify-between items-center mb-4">
-        <h3 class="text-lg font-bold text-gray-900 dark:text-white">Batch Overdue Communications</h3>
-        <!-- The Button is now here, safely next to the data! -->
-        <form action="{{ url_for('admin.batch_reminders') }}" method="POST">
-            <button type="submit" {% if not preview_list %}disabled{% endif %}
-                class="text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50 font-medium rounded-lg text-sm px-4 py-2 flex items-center">
-                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z">
-                    </path>
-                </svg>
-                Send Reminders to {{ preview_list|length }} Users
-            </button>
-        </form>
-    </div>
-
-    <div class="overflow-x-auto">
-        <table class="w-full text-sm text-left text-gray-500">
-            <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
-                <tr>
-                    <th>Member</th>
-                    <th>Email</th>
-                    <th>Book Title</th>
-                    <th>Due Date</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for item in preview_list %}
-                <tr class="border-b dark:border-gray-700">
-                    <td class="px-6 py-3 font-medium text-gray-900 dark:text-white">{{ item.name }}</td>
-                    <td class="px-6 py-3">{{ item.email }}</td>
-                    <td class="px-6 py-3 text-red-600">{{ item.book }}</td>
-                    <td class="px-6 py-3">{{ item.due.strftime('%Y-%m-%d') }}</td>
-                </tr>
-                {% else %}
-                <tr>
-                    <td colspan="4" class="px-6 py-4 text-center text-gray-500">No overdue books right now!</td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </div>
-</div>
+<!-- Chart Data Integration -->
+<script id="chart-data" type="application/json">
+{{ chart_data | tojson | safe }}
+</script>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-    // 1. Safely parse the entire Python dictionary into a Javascript object
-    const analyticsData = {{ chart_data | tojson | safe }};
-    
-    // 2. Setup the chart
-    const ctx = document.getElementById('categoryChart').getContext('2d');
-    new Chart(ctx, {
-        type: 'doughnut',
-        data: {
-            // 3. Use pure JavaScript to access the data now! No more Jinja brackets here.
-            labels: analyticsData.categories.labels,
-            datasets: [{
-                data: analyticsData.categories.data,
-                backgroundColor: ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'],
-                borderWidth: 1
-            }]
-        },
-        options: { responsive: true }
+    document.addEventListener('DOMContentLoaded', function() {
+        const analyticsData = JSON.parse(document.getElementById('chart-data').textContent);
+        
+        // Common Chart Defaults
+        Chart.defaults.font.family = "'Inter', sans-serif";
+        Chart.defaults.color = '#84776B';
+        
+        const gridColor = '#F5F0E7';
+        
+        // 1. Timeline Chart (Line)
+        new Chart(document.getElementById('timelineChart').getContext('2d'), {
+            type: 'line',
+            data: {
+                labels: analyticsData.timeline.labels,
+                datasets: [{
+                    label: 'Books Borrowed',
+                    data: analyticsData.timeline.data,
+                    borderColor: '#4F7CE8',
+                    backgroundColor: 'rgba(79, 124, 232, 0.1)',
+                    borderWidth: 2,
+                    tension: 0.3,
+                    fill: true,
+                    pointBackgroundColor: '#4F7CE8'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    y: { grid: { color: gridColor }, beginAtZero: true, ticks: { precision: 0 } },
+                    x: { grid: { display: false } }
+                }
+            }
+        });
+
+        // 2. Tiers Chart (Bar)
+        new Chart(document.getElementById('tierChart').getContext('2d'), {
+            type: 'bar',
+            data: {
+                labels: analyticsData.tiers.labels,
+                datasets: [{
+                    label: 'Borrows',
+                    data: analyticsData.tiers.data,
+                    backgroundColor: '#B77B2D',
+                    borderRadius: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    y: { grid: { color: gridColor }, beginAtZero: true, ticks: { precision: 0 } },
+                    x: { grid: { display: false } }
+                }
+            }
+        });
+
+        // 3. Category Chart (Doughnut)
+        new Chart(document.getElementById('categoryChart').getContext('2d'), {
+            type: 'doughnut',
+            data: {
+                labels: analyticsData.categories.labels,
+                datasets: [{
+                    data: analyticsData.categories.data,
+                    backgroundColor: ['#4F7CE8', '#4E7A56', '#B77B2D', '#A5443D', '#5A4F46', '#84776B'],
+                    borderWidth: 0,
+                    hoverOffset: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                cutout: '65%',
+                plugins: {
+                    legend: {
+                        position: 'right',
+                        labels: { boxWidth: 10, usePointStyle: true, font: { size: 11 } }
+                    }
+                }
+            }
+        });
     });
 </script>
 {% endblock %}

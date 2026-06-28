@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+
+{% block title %}404 Not Found — Libra{% endblock %}
+{% block page_title %}{% endblock %}
+
+{% block content %}
+<style>
+    @keyframes float {
+        0% { transform: translateY(0px); }
+        50% { transform: translateY(-10px); }
+        100% { transform: translateY(0px); }
+    }
+    .error-icon {
+        animation: float 6s ease-in-out infinite;
+        width: 64px; height: 64px;
+        margin: 0 auto 24px auto;
+        opacity: 0.8;
+    }
+    .error-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        min-height: 60vh;
+        text-align: center;
+    }
+</style>
+
+<div class="error-container page-transition">
+    <svg class="error-icon" viewBox="0 0 24 24" fill="none" stroke="var(--border-strong)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"></path>
+        <path d="M8 7h6"></path>
+        <path d="M8 11h8"></path>
+        <path d="M11 15h5"></path>
+    </svg>
+    
+    <h1 style="font-size: 24px; font-weight: 600; color: var(--text-primary); margin-bottom: 8px; letter-spacing: -0.02em;">The manuscript could not be located.</h1>
+    
+    <p style="color: var(--text-secondary); max-width: 420px; margin-bottom: 32px; font-size: 15px; line-height: 1.6;">
+        Error 404. The document you are searching for has either been moved to the archives or never existed in our collection.
+    </p>
+
+    <a href="{{ url_for('main.dashboard') }}" class="btn btn-primary" style="padding: 10px 20px;">
+        <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+        Return to Dashboard
+    </a>
+</div>
+{% endblock %}

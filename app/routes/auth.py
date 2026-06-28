@@ -42,3 +42,37 @@ def logout():
     logout_user()
     flash('You have been logged out.', 'info')
     return redirect(url_for('auth.login'))
+
+@auth_bp.before_app_request
+def check_password_change():
+    if current_user.is_authenticated and getattr(current_user, 'must_change_password', False):
+        if request.endpoint and not request.endpoint.startswith('auth.') and not request.endpoint == 'static':
+            return redirect(url_for('auth.change_password'))
+
+@auth_bp.route('/change-password', methods=['GET', 'POST'])
+def change_password():
+    from flask_login import login_required
+    from app.extensions import db
+    
+    if not current_user.is_authenticated:
+        return redirect(url_for('auth.login'))
+        
+    if request.method == 'POST':
+        current_pw = request.form.get('current_password')
+        new_pw = request.form.get('new_password')
+        confirm_pw = request.form.get('confirm_password')
+        
+        if not current_user.check_password(current_pw):
+            flash('Current password is incorrect.', 'error')
+        elif new_pw != confirm_pw:
+            flash('New passwords do not match.', 'error')
+        elif len(new_pw) < 8:
+            flash('Password must be at least 8 characters.', 'error')
+        else:
+            current_user.set_password(new_pw)
+            current_user.must_change_password = False
+            db.session.commit()
+            flash('Password updated successfully.', 'success')
+            return redirect('/')
+            
+    return render_template('auth/change_password.html')

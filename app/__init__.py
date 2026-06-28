@@ -52,4 +52,41 @@ def create_app(config_class=Config):
 
     app.register_blueprint(admin_bp)
     
+    # Register error handlers
+    from flask import render_template
+    
+    @app.errorhandler(403)
+    def forbidden_error(error):
+        return render_template('errors/403.html'), 403
+
+    @app.errorhandler(404)
+    def not_found_error(error):
+        return render_template('errors/404.html'), 404
+
+    @app.errorhandler(500)
+    def internal_error(error):
+        db.session.rollback()
+        return render_template('errors/500.html'), 500
+
+    @app.context_processor
+    def inject_notifications():
+        from flask_login import current_user
+        from datetime import datetime, timedelta
+        from app.models.transaction import Transaction
+        
+        banner = None
+        if current_user.is_authenticated and current_user.role == 'member':
+            soon = datetime.utcnow() + timedelta(days=2)
+            due_soon_count = Transaction.query.filter_by(
+                member_id=current_user.id, 
+                status='active'
+            ).filter(Transaction.due_date <= soon).count()
+            
+            if due_soon_count > 0:
+                banner = {
+                    'type': 'warning',
+                    'message': f"You have {due_soon_count} book{'s' if due_soon_count > 1 else ''} due soon or overdue."
+                }
+        return dict(global_banner=banner)
+
     return app

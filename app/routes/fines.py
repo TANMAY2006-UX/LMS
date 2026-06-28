@@ -56,6 +56,17 @@ def pay_fine(fine_id):
         fine.status = 'paid'
         fine.paid_at = datetime.utcnow()
         # For our MVP, we assume the librarian collected the physical cash.
+        
+        from app.models.audit import AuditLog
+        audit = AuditLog(
+            action='FINE_PAID',
+            entity_type='fine',
+            entity_id=fine.id,
+            description=f"Fine #{fine.id} (₹{fine.amount}) paid and collected by {current_user.name}.",
+            actor_id=current_user.id
+        )
+        db.session.add(audit)
+        
         db.session.commit()
         flash(f"Fine #{fine.id} successfully marked as PAID.", "success")
     except Exception as e:
@@ -87,7 +98,16 @@ def waive_fine(fine_id):
         fine.waived_by = current_user.id
         fine.waiver_reason = reason.strip()
         
-        # NOTE: We will hook up the AuditLog here during Phase 2!
+        # Hook up the AuditLog
+        from app.models.audit import AuditLog
+        audit = AuditLog(
+            action='FINE_WAIVED',
+            entity_type='fine',
+            entity_id=fine.id,
+            description=f"Fine #{fine.id} (₹{fine.amount}) waived. Reason: {reason.strip()}",
+            actor_id=current_user.id
+        )
+        db.session.add(audit)
         
         db.session.commit()
         flash(f"Fine #{fine.id} successfully WAIVED.", "success")

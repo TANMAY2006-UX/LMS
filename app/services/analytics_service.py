@@ -113,6 +113,8 @@ class AnalyticsService:
     def get_dashboard_chart_data():
         """Aggregates data for Chart.js admin dashboard."""
         from app.models.book import Category
+        from app.models.user import User
+        from datetime import datetime, timedelta
         
         # 1. Borrowing by Category (Pie Chart)
         category_stats = db.session.query(
@@ -125,9 +127,38 @@ class AnalyticsService:
             Category, Book.category_id == Category.id
         ).group_by(Category.name).all()
 
+        # 2. Borrowing by User Tier (Bar Chart)
+        tier_stats = db.session.query(
+            User.tier, func.count(Transaction.id)
+        ).select_from(Transaction).join(
+            User, Transaction.member_id == User.id
+        ).filter(User.tier.isnot(None)).group_by(User.tier).all()
+
+        # 3. Borrowing Timeline (Last 7 Days)
+        timeline = []
+        counts = []
+        today = datetime.utcnow().date()
+        for i in range(6, -1, -1):
+            day = today - timedelta(days=i)
+            timeline.append(day.strftime('%a'))
+            
+            # Count transactions for that day
+            day_count = db.session.query(func.count(Transaction.id)).filter(
+                func.date(Transaction.issued_at) == day
+            ).scalar() or 0
+            counts.append(day_count)
+
         return {
             "categories": {
                 "labels": [stat[0] for stat in category_stats],
                 "data": [stat[1] for stat in category_stats]
+            },
+            "tiers": {
+                "labels": [str(stat[0]).title() for stat in tier_stats],
+                "data": [stat[1] for stat in tier_stats]
+            },
+            "timeline": {
+                "labels": timeline,
+                "data": counts
             }
         }

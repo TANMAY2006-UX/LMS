@@ -28,6 +28,12 @@ def index():
             'password': request.form.get('password')
         }
         
+        from flask_login import current_user
+        if current_user.role == 'admin':
+            form_data['role'] = request.form.get('role', 'member')
+        else:
+            form_data['role'] = 'member'
+        
         # Send to the service layer
         result = MemberService.create_member(form_data)
         
@@ -44,5 +50,29 @@ def index():
     # This creates a dictionary mapping member IDs to True/False for the velocity flag
     velocity_flags = {m.id: AnalyticsService.get_borrowing_velocity_flag(m.id) for m in members}
     
-    # Pass the new dictionary to the template
+    velocity_flags = {m.id: AnalyticsService.get_borrowing_velocity_flag(m.id) for m in members}
     return render_template('members/index.html', members=members, velocity_flags=velocity_flags)
+
+@members_bp.route('/api/search', methods=['GET'])
+@login_required
+@role_required('admin', 'librarian')
+def search_members_api():
+    query = request.args.get('q', '').strip()
+    if len(query) < 2:
+        return jsonify([])
+        
+    search_pattern = f"%{query}%"
+    from app.models.user import User
+    from app import db
+    members = User.query.filter(
+        db.or_(
+            User.name.ilike(search_pattern),
+            User.email.ilike(search_pattern)
+        ),
+        User.role == 'member',
+        User.is_active == True
+    ).limit(10).all()
+    
+    results = [{'id': m.id, 'name': m.name, 'email': m.email, 'tier': m.tier} for m in members]
+    from flask import jsonify
+    return jsonify(results)

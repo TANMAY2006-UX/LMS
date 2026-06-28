@@ -34,6 +34,24 @@ class IssueService:
         if already_has:
             return {"success": False, "error": f"Member already has an active borrowed copy of '{book.title}'."}
 
+        # Check Waitlist Queue Logic: Block direct issue if others are waiting!
+        from app.models.reservation import Reservation
+        # Are there any active reservations for this book?
+        active_reservations = Reservation.query.filter(
+            Reservation.book_id == book_id,
+            Reservation.status.in_(['waiting', 'notified'])
+        ).order_by(Reservation.fairness_score.desc(), Reservation.queued_at.asc()).all()
+
+        if active_reservations:
+            # The FIRST person in line gets exclusive rights (either notified or just waiting)
+            first_in_line = active_reservations[0]
+            if first_in_line.member_id != member_id:
+                return {"success": False, "error": f"Direct issue blocked. This book is reserved for a waitlisted member."}
+            else:
+                # If they are first in line, and their status is 'waiting' or 'notified', we let them have it!
+                # We also need to mark the reservation as 'collected' in the execute phase.
+                pass
+
         # Check borrow limit (Tier policies: Student=3, Faculty/Staff=5)
         active_txns = Transaction.query.filter_by(member_id=member_id, status='active').count()
         limit = 5 if member.tier in ['faculty', 'staff'] else 3
@@ -99,6 +117,17 @@ class IssueService:
                 actor_id=librarian_id
             )
             db.session.add(audit)
+            
+            # 6.5 Mark reservation as collected if it exists!
+            from app.models.reservation import Reservation
+            active_res = Reservation.query.filter(
+                Reservation.member_id == member_id,
+                Reservation.book_id == book_id,
+                Reservation.status.in_(['waiting', 'notified'])
+            ).first()
+            if active_res:
+                active_res.status = 'collected'
+                active_res.notes = (active_res.notes or '') + f"\nCollected via Transaction #{txn.id} on {datetime.utcnow().strftime('%Y-%m-%d %H:%M')}."
 
             # 7. Commit everything together safely
             db.session.commit()

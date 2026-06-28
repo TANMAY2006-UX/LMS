@@ -18,16 +18,17 @@ class User(db.Model, UserMixin):
     # Admin / Librarian / Member
     role = db.Column(db.String(20), nullable=False)
 
-    # Tiers for Fine_Policy
-    tier = db.Column(db.String(20), nullable=False, default='student')
+    # Tiers for Fine_Policy (Only applies to 'member' role)
+    tier = db.Column(db.String(20), nullable=True)
 
     is_active = db.Column(db.Boolean, default=True)
     joined_date = db.Column(db.Date, default=datetime.utcnow)
+    must_change_password = db.Column(db.Boolean, default=False)
 
     __table_args__ = (
         # Check for Roles & Tiers
         db.CheckConstraint("role IN ('admin', 'librarian', 'member')", name='chk_users_role'),
-        db.CheckConstraint("tier IN ('student', 'faculty', 'staff')", name='chk_users_tier'),
+        db.CheckConstraint("tier IS NULL OR tier IN ('student', 'faculty', 'staff')", name='chk_users_tier'),
     )
 
     # Hashes the password before saving it to the database.

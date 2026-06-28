@@ -4,6 +4,8 @@ from app.services.reservation_service import ReservationService
 from app.models.reservation import Reservation
 from app.models.book import Book
 from app.models.user import User
+from datetime import datetime, timedelta
+from app.extensions import db
 
 try:
     from app.utils import role_required
@@ -27,16 +29,44 @@ def index():
     
     # Bundle the data for the template
     queue_data = []
+    
+    # First pass: count total people in queue per book
+    book_totals = {}
     for res in active_reservations:
+        book_totals[res.book_id] = book_totals.get(res.book_id, 0) + 1
+
+    # Calculate position per book
+    book_queues = {}
+    for res in active_reservations:
+        if res.book_id not in book_queues:
+            book_queues[res.book_id] = 1
+        else:
+            book_queues[res.book_id] += 1
+            
         book = Book.query.get(res.book_id)
         member = User.query.get(res.member_id)
+        
+        # Position label logic
+        pos = book_queues[res.book_id]
+        total = book_totals[res.book_id]
+        
+        if res.status == 'notified':
+            pos_label = "Next Eligible Member"
+        elif pos == 1:
+            pos_label = "First in line"
+        else:
+            pos_label = f"Position {pos} of {total}"
+
         queue_data.append({
             'id': res.id,
             'book_title': book.title,
             'member_name': member.name,
             'member_tier': member.tier,
             'status': res.status,
-            'queued_at': res.queued_at
+            'queued_at': res.queued_at,
+            'position': pos,
+            'position_label': pos_label,
+            'notes': res.notes
         })
         
     # We also need lists for the manual "Add to Queue" form
@@ -83,3 +113,48 @@ def member_join_waitlist(book_id):
         flash(result['error'], "error")
         
     return redirect(url_for('books.book_detail', book_id=book_id))
+
+@reservations_bp.route('/<int:reservation_id>/remove', methods=['POST'])
+@login_required
+@role_required('admin', 'librarian')
+def remove_from_queue(reservation_id):
+    """Remove a user from the queue permanently."""
+    res = Reservation.query.get(reservation_id)
+    if res:
+        res.status = 'removed'
+        res.notes = (res.notes or '') + f"\nRemoved by {current_user.name} on {datetime.utcnow().strftime('%Y-%m-%d %H:%M')}."
+        db.session.commit()
+        flash("User removed from the waitlist.", "success")
+    return redirect(url_for('reservations.index'))
+
+@reservations_bp.route('/<int:reservation_id>/skip', methods=['POST'])
+@login_required
+@role_required('admin', 'librarian')
+def skip_user(reservation_id):
+    """Skip a user (move them down in priority)."""
+    res = Reservation.query.get(reservation_id)
+    if res:
+        # Lower fairness score to push them back
+        res.fairness_score -= 10
+        if res.status == 'notified':
+            res.status = 'waiting'
+        res.notes = (res.notes or '') + f"\nSkipped by {current_user.name} on {datetime.utcnow().strftime('%Y-%m-%d %H:%M')}."
+        db.session.commit()
+        flash("User skipped in the waitlist.", "info")
+    return redirect(url_for('reservations.index'))
+
+@reservations_bp.route('/<int:reservation_id>/promote', methods=['POST'])
+@login_required
+@role_required('admin', 'librarian')
+def promote_user(reservation_id):
+    """Manually promote and notify a specific user."""
+    res = Reservation.query.get(reservation_id)
+    if res and res.status == 'waiting':
+        res.status = 'notified'
+        res.notified_at = datetime.utcnow()
+        res.expires_at = datetime.utcnow() + timedelta(hours=48)
+        res.notes = (res.notes or '') + f"\nManually promoted by {current_user.name} on {datetime.utcnow().strftime('%Y-%m-%d %H:%M')}."
+        # In a real app, send email here via NotificationService
+        db.session.commit()
+        flash("User manually promoted and notified.", "success")
+    return redirect(url_for('reservations.index'))

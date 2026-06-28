@@ -15,16 +15,17 @@ class Reservation(db.Model):
     status = db.Column(db.String(20), default='waiting')
     notified_at = db.Column(db.DateTime)
     expires_at = db.Column(db.DateTime)
+    notes = db.Column(db.Text)
     
     # Incremented each time the user gets bumped to the back of the queue
     fairness_score = db.Column(db.Integer, default=0)
 
     __table_args__ = (
-        db.CheckConstraint("status IN ('waiting', 'notified', 'fulfilled', 'expired', 'cancelled')", name='chk_reservation_status'),
+        db.CheckConstraint("status IN ('waiting', 'notified', 'collected', 'expired', 'removed')", name='chk_reservation_status'),
         
         # You cannot have an expiry date if you have NOT been notified yet
         db.CheckConstraint(
-            "(status IN ('waiting', 'cancelled') AND expires_at IS NULL) OR (status IN ('notified', 'fulfilled', 'expired'))",
+            "(status IN ('waiting', 'removed') AND expires_at IS NULL) OR (status IN ('notified', 'collected', 'expired'))",
             name='chk_expires_only_when_notified'
         ),
         

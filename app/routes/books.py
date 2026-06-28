@@ -49,6 +49,27 @@ def index():
     # If it's a normal full page load, send the whole page
     return render_template('books/index.html', books=books)
 
+@books_bp.route('/api/search', methods=['GET'])
+@login_required
+@role_required('admin', 'librarian')
+def search_books_api():
+    query = request.args.get('q', '').strip()
+    if len(query) < 2:
+        return jsonify([])
+        
+    search_pattern = f"%{query}%"
+    books = Book.query.filter(
+        db.or_(
+            Book.title.ilike(search_pattern),
+            Book.author.ilike(search_pattern),
+            Book.isbn.ilike(search_pattern)
+        ),
+        Book.available_copies > 0
+    ).limit(10).all()
+    
+    results = [{'id': b.id, 'title': b.title, 'author': b.author, 'isbn': b.isbn, 'available': b.available_copies} for b in books]
+    return jsonify(results)
+
 @books_bp.route('/<int:book_id>', methods=['GET'])
 @login_required
 def book_detail(book_id):

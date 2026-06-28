@@ -8,8 +8,8 @@ class MemberService:
 
     @staticmethod
     def get_all_members():
-        """Fetches all users who have the 'member' role."""
-        return User.query.filter_by(role='member').order_by(User.joined_date.desc()).all()
+        """Fetches all users."""
+        return User.query.order_by(User.joined_date.desc()).all()
 
     @staticmethod
     def create_member(data: dict):
@@ -21,11 +21,15 @@ class MemberService:
 
         # 2. Create the user object
         try:
+            role_val = data.get('role', 'member')
+            tier_val = data.get('tier', 'student') if role_val == 'member' else None
+            
             new_member = User(
                 name=data['name'],
                 email=data['email'],
-                role='member',               # Hardcoded to 'member' for security 
-                tier=data.get('tier', 'student') # Defaults to 'student'
+                role=role_val,
+                tier=tier_val,
+                must_change_password=True
             )
             
             # Use the secure hashing function from our User model

@@ -1,49 +1,47 @@
 {% extends "base.html" %}
 
+{% block page_title %}Books{% endblock %}
+
 {% block content %}
-<div class="space-y-6">
-    <!-- Header Area -->
-    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b border-gray-200 dark:border-gray-700 pb-4 gap-4">
-        <div>
-            <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Books & Inventory</h1>
-            <p class="text-sm text-gray-500 dark:text-gray-400">Browse and manage the library catalog.</p>
-        </div>
-        
-        <!-- Only Admins and Librarians see the Add Book button -->
-        {% if current_user.role in ['admin', 'librarian'] %}
-        <a href="{{ url_for('books.add_book') }}" class="text-white bg-blue-600 hover:bg-blue-700 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800 flex items-center shadow-sm">
-            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
-            Add New Book
+<div class="page-header" style="display: flex; justify-content: space-between; align-items: flex-end;">
+    <div>
+        <h1>Books & Inventory</h1>
+        <p>Browse and manage the library catalog.</p>
+    </div>
+    
+    {% if current_user.role in ['admin', 'librarian'] %}
+    <div>
+        <a href="{{ url_for('books.add_book') }}" class="btn btn-primary">
+            <svg class="nav-icon" style="width: 14px; height: 14px; margin-right: 6px; stroke-width: 2;" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+            Add Book
         </a>
-        {% endif %}
     </div>
+    {% endif %}
+</div>
 
-    <!-- NEW: HTMX Live Search Bar -->
-    <div class="max-w-2xl relative">
-        <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-            <svg aria-hidden="true" class="w-5 h-5 text-gray-500 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
-        </div>
-        <input 
-            type="search" 
-            name="q" 
-            class="block w-full p-4 pl-10 text-sm text-gray-900 border border-gray-300 rounded-lg bg-gray-50 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:border-gray-700 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 shadow-sm" 
-            placeholder="Search by Title, Author, or ISBN..."
-            
-            hx-get="{{ url_for('books.index') }}"
-            hx-trigger="keyup changed delay:300ms, search"
-            hx-target="#search-results"
-            hx-indicator=".htmx-indicator"
-        >
-        <!-- A tiny loading spinner that shows up only when searching -->
-        <div class="htmx-indicator absolute right-3 top-4">
-            <svg class="animate-spin h-5 w-5 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-        </div>
+<div class="filter-bar" style="max-width: 600px;">
+    <svg style="width: 18px; height: 18px; stroke: var(--text-muted); fill: none; stroke-width: 2;" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+    <input 
+        type="search" 
+        name="q" 
+        class="form-input" 
+        style="border: none; background: transparent; box-shadow: none; padding: 0; font-size: 14px;"
+        placeholder="Search by Title, Author, or ISBN..."
+        hx-get="{{ url_for('books.index') }}"
+        hx-trigger="keyup changed delay:300ms, search"
+        hx-target="#search-results"
+        hx-indicator=".htmx-indicator"
+    >
+    <div class="htmx-indicator">
+        <svg style="width: 16px; height: 16px; stroke: var(--accent); fill: none; stroke-width: 2; animation: spin 1s linear infinite;" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-dasharray="30 30" stroke-linecap="round"></circle></svg>
     </div>
+</div>
 
-    <!-- The Book Grid Container (This is where HTMX puts the results) -->
-    <div id="search-results" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
-        <!-- We use the partial here on the first page load! -->
-        {% include "books/partials/book_grid.html" %}
-    </div>
+<style>
+@keyframes spin { 100% { transform: rotate(360deg); } }
+</style>
+
+<div id="search-results" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 24px;">
+    {% include "books/partials/book_grid.html" %}
 </div>
 {% endblock %}

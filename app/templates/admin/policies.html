@@ -1,32 +1,58 @@
 {% extends "base.html" %}
+{% block page_title %}Fine Policies{% endblock %}
+
 {% block content %}
-<div class="max-w-7xl mx-auto space-y-6">
-    <div class="border-b border-gray-200 pb-4">
-        <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Fine Policy Management</h1>
-        <p class="text-sm text-gray-500">Adjust dynamic rates and grace periods.</p>
+<div style="max-width: 1000px; margin: 0 auto; display: flex; flex-direction: column; gap: 32px;">
+    
+    <div class="page-header">
+        <div>
+            <h1>Fine Policy Management</h1>
+            <p>Adjust dynamic fine rates, grace periods, and caps for different member tiers.</p>
+        </div>
     </div>
 
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 24px;">
         {% for policy in policies %}
-        <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-sm border border-gray-200">
-            <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-4">{{ policy.name }} ({{ policy.applies_to_tier | title }})</h3>
-            <form action="{{ url_for('admin.manage_policies') }}" method="POST" class="space-y-4">
+        <div class="card" style="padding: 24px; display: flex; flex-direction: column;">
+            
+            <div style="margin-bottom: 20px; border-bottom: 1px solid var(--border); padding-bottom: 16px;">
+                <div style="font-size: 11px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px;">Applies To</div>
+                <h3 style="font-size: 18px; font-weight: 600; color: var(--text-primary); margin: 0; text-transform: capitalize;">{{ policy.applies_to_tier }} Members</h3>
+                <div style="font-size: 13px; color: var(--text-secondary); margin-top: 4px;">{{ policy.name }}</div>
+            </div>
+
+            <form action="{{ url_for('admin.manage_policies') }}" method="POST" style="display: flex; flex-direction: column; gap: 16px; flex: 1;">
                 <input type="hidden" name="policy_id" value="{{ policy.id }}">
                 
                 <div>
-                    <label class="block text-sm font-medium">Rate per Day (₹)</label>
-                    <input type="number" step="0.01" name="rate_per_day" value="{{ policy.rate_per_day }}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm">
-                </div>
-                <div>
-                    <label class="block text-sm font-medium">Grace Days</label>
-                    <input type="number" name="grace_days" value="{{ policy.grace_days }}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm sm:text-sm">
-                </div>
-                <div>
-                    <label class="block text-sm font-medium">Max Cap (₹)</label>
-                    <input type="number" step="0.01" name="max_fine_cap" value="{{ policy.max_fine_cap }}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm sm:text-sm">
+                    <label class="form-label" style="display: flex; justify-content: space-between;">
+                        <span>Rate per Day (₹)</span>
+                        <span style="color: var(--text-muted); font-weight: 400;">Per item</span>
+                    </label>
+                    <input type="number" step="0.01" name="rate_per_day" value="{{ policy.rate_per_day }}" class="form-input" required>
                 </div>
                 
-                <button type="submit" class="w-full bg-blue-600 text-white rounded-md py-2 px-4 hover:bg-blue-700">Save Policy</button>
+                <div>
+                    <label class="form-label" style="display: flex; justify-content: space-between;">
+                        <span>Grace Days</span>
+                        <span style="color: var(--text-muted); font-weight: 400;">No fine period</span>
+                    </label>
+                    <input type="number" name="grace_days" value="{{ policy.grace_days }}" class="form-input" required>
+                </div>
+                
+                <div>
+                    <label class="form-label" style="display: flex; justify-content: space-between;">
+                        <span>Maximum Cap (₹)</span>
+                        <span style="color: var(--text-muted); font-weight: 400;">Hard limit</span>
+                    </label>
+                    <input type="number" step="0.01" name="max_fine_cap" value="{{ policy.max_fine_cap }}" class="form-input" required>
+                </div>
+                
+                <div style="margin-top: auto; padding-top: 16px;">
+                    <button type="submit" class="btn btn-primary" style="width: 100%; justify-content: center;">
+                        Save Policy
+                    </button>
+                </div>
             </form>
         </div>
         {% endfor %}

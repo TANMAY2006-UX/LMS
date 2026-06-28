@@ -40,6 +40,12 @@ class Transaction(db.Model):
     # One Transaction can have multiple fine events  
     fines = db.relationship('Fine', backref='transaction', lazy=True, cascade="all, delete-orphan")
 
+    # Relationships
+    member = db.relationship('User', foreign_keys=[member_id], backref=db.backref('borrow_transactions', lazy=True))
+    issuer = db.relationship('User', foreign_keys=[issued_by])
+    receiver = db.relationship('User', foreign_keys=[returned_by])
+    copy = db.relationship('BookCopy', backref=db.backref('transactions', lazy=True))
+
     # Transaction rules and constraints with indexing:
     __table_args = (
         # Status of the book

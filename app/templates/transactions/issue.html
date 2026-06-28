@@ -1,52 +1,120 @@
 {% extends "base.html" %}
 
+{% block page_title %}Issue Book{% endblock %}
+
 {% block content %}
-<div class="max-w-3xl mx-auto space-y-6">
+<div style="max-width: 600px; margin: 0 auto; display: flex; flex-direction: column; gap: 32px;">
     
-    <!-- Header -->
-    <div class="border-b border-gray-200 dark:border-gray-700 pb-4">
-        <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Issue a Book</h1>
-        <p class="text-sm text-gray-500 dark:text-gray-400">Select an active member and an available book to create a new transaction.</p>
+    <div class="page-header">
+        <div>
+            <h1>Issue a Book</h1>
+            <p>Select a member and an available book to create a new transaction.</p>
+        </div>
     </div>
 
-    <!-- Issue Form -->
-    <div class="bg-white dark:bg-gray-800 p-6 sm:p-8 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
-        <form action="{{ url_for('transactions.issue_book') }}" method="POST" class="space-y-6">
+    <div class="card" style="padding: 32px; overflow: visible;">
+        <form action="{{ url_for('transactions.issue_book') }}" method="POST" style="display: flex; flex-direction: column; gap: 24px;">
             
-            <!-- Member Selection Dropdown -->
-            <div>
-                <label for="member_id" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Select Member</label>
-                <select id="member_id" name="member_id" required class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
-                    <option value="" disabled selected>Choose a student or faculty member...</option>
-                    {% for member in members %}
-                        <option value="{{ member.id }}">{{ member.name }} ({{ member.email }}) - {{ member.tier | title }}</option>
-                    {% else %}
-                        <option value="" disabled>No active members found. Please add a member first.</option>
-                    {% endfor %}
-                </select>
-                <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Only active members with the 'member' role are shown.</p>
+            <!-- Typeahead for Member -->
+            <div x-data="typeahead('/members/api/search', 'member_id', 'Search members by name or email...')">
+                <label class="form-label">Select Member</label>
+                <div style="position: relative;">
+                    <!-- Visible search input -->
+                    <input type="text" x-model="query" @input.debounce.300ms="fetchData" @focus="open = true" @click.away="open = false" @keydown.escape="open = false" :placeholder="placeholder" class="form-input" autocomplete="off">
+                    
+                    <!-- Hidden input to hold the actual selected ID -->
+                    <input type="hidden" :name="inputName" :value="selectedId" required>
+
+                    <!-- Dropdown results -->
+                    <div x-show="open && results.length > 0" style="position: absolute; top: 100%; left: 0; right: 0; z-index: 50; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; margin-top: 4px; box-shadow: var(--shadow-md); max-height: 250px; overflow-y: auto;">
+                        <template x-for="item in results" :key="item.id">
+                            <div @click="selectItem(item, item.name)" style="padding: 10px 16px; border-bottom: 1px solid var(--border); cursor: pointer;" class="hover-bg">
+                                <div style="display: flex; justify-content: space-between; align-items: center;">
+                                    <div>
+                                        <div style="font-weight: 500; color: var(--text-primary);" x-text="item.name"></div>
+                                        <div style="font-size: 12px; color: var(--text-muted);" x-text="item.email"></div>
+                                    </div>
+                                    <span class="badge badge-neutral" style="text-transform: capitalize;" x-text="item.tier"></span>
+                                </div>
+                            </div>
+                        </template>
+                    </div>
+                </div>
+                <p style="font-size: 11px; color: var(--text-muted); margin-top: 6px;">Type at least 2 characters to search.</p>
             </div>
 
-            <!-- Book Selection Dropdown -->
-            <div>
-                <label for="book_id" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Select Book</label>
-                <select id="book_id" name="book_id" required class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
-                    <option value="" disabled selected>Choose a book to issue...</option>
-                    {% for book in books %}
-                        <option value="{{ book.id }}">{{ book.title }} by {{ book.author }} ({{ book.available_copies }} available)</option>
-                    {% else %}
-                        <option value="" disabled>No books are currently available in the inventory.</option>
-                    {% endfor %}
-                </select>
-                <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Only books with at least 1 available physical copy are shown.</p>
+            <!-- Typeahead for Book -->
+            <div x-data="typeahead('/books/api/search', 'book_id', 'Search books by title, author, or ISBN...')">
+                <label class="form-label">Select Book</label>
+                <div style="position: relative;">
+                    <!-- Visible search input -->
+                    <input type="text" x-model="query" @input.debounce.300ms="fetchData" @focus="open = true" @click.away="open = false" @keydown.escape="open = false" :placeholder="placeholder" class="form-input" autocomplete="off">
+                    
+                    <!-- Hidden input to hold the actual selected ID -->
+                    <input type="hidden" :name="inputName" :value="selectedId" required>
+
+                    <!-- Dropdown results -->
+                    <div x-show="open && results.length > 0" style="position: absolute; top: 100%; left: 0; right: 0; z-index: 50; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; margin-top: 4px; box-shadow: var(--shadow-md); max-height: 250px; overflow-y: auto;">
+                        <template x-for="item in results" :key="item.id">
+                            <div @click="selectItem(item, item.title)" style="padding: 10px 16px; border-bottom: 1px solid var(--border); cursor: pointer;" class="hover-bg">
+                                <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                                    <div>
+                                        <div style="font-weight: 500; color: var(--text-primary);" x-text="item.title"></div>
+                                        <div style="font-size: 12px; color: var(--text-secondary);">By <span x-text="item.author"></span></div>
+                                    </div>
+                                    <div style="display: flex; align-items: center; gap: 4px; color: var(--success); font-size: 12px; font-weight: 500;">
+                                        <svg style="width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-width: 2;" viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                                        <span x-text="item.available + ' left'"></span>
+                                    </div>
+                                </div>
+                            </div>
+                        </template>
+                    </div>
+                </div>
             </div>
 
-            <div class="pt-4 border-t border-gray-200 dark:border-gray-700">
-                <button type="submit" class="w-full text-white bg-blue-600 hover:bg-blue-700 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-3 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800 shadow-md transition-colors">
-                    Issue Book to Member
+            <div style="margin-top: 8px; padding-top: 24px; border-top: 1px solid var(--border);">
+                <button type="submit" class="btn btn-primary" style="width: 100%; justify-content: center; padding: 12px; font-size: 14px;">
+                    Issue Book
                 </button>
             </div>
         </form>
     </div>
 </div>
+
+<script>
+    document.addEventListener('alpine:init', () => {
+        Alpine.data('typeahead', (endpoint, inputName, placeholder) => ({
+            query: '',
+            results: [],
+            open: false,
+            selectedId: '',
+            inputName: inputName,
+            placeholder: placeholder,
+
+            async fetchData() {
+                if (this.query.length < 2) {
+                    this.results = [];
+                    return;
+                }
+                const response = await fetch(`${endpoint}?q=${encodeURIComponent(this.query)}`);
+                const data = await response.json();
+                this.results = data;
+                this.open = true;
+            },
+            
+            selectItem(item, displayName) {
+                this.selectedId = item.id;
+                this.query = displayName;
+                this.open = false;
+            }
+        }));
+    });
+</script>
+
+<style>
+    .hover-bg:hover {
+        background: var(--surface-raised);
+    }
+</style>
 {% endblock %}
